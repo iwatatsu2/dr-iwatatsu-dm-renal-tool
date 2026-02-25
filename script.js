@@ -2,182 +2,489 @@
 
 /* =====================================================
    Dr.いわたつ 糖尿病経口薬 腎機能サポートツール
-   script.js  ver1.0
+   script.js  ver2.0  (成分マスターベース 全面再設計)
+   2026-02
 ===================================================== */
 
-// ── ユーティリティ ──────────────────────────────────
-function theme(key) {
-  const map = { green:'theme-green', yellow:'theme-yellow', orange:'theme-orange', red:'theme-red', gray:'theme-gray' };
-  return map[key] || 'theme-gray';
-}
-function badge(key) {
-  const map = { green:'badge-green', yellow:'badge-yellow', orange:'badge-orange', red:'badge-red', gray:'badge-gray' };
-  return map[key] || 'badge-gray';
+// ══════════════════════════════════════════════════════
+//  成分マスター
+// ══════════════════════════════════════════════════════
+const ingredientMaster = [
+  {
+    ingredient: "メトホルミン",
+    class: "ビグアナイド",
+    renal: [
+      { min: 60,  max: 999, text: "最大 2250 mg/日", level: "green"  },
+      { min: 45,  max: 59,  text: "最大 1500 mg/日", level: "yellow" },
+      { min: 30,  max: 44,  text: "最大 750 mg/日",  level: "orange" },
+      { min: 0,   max: 29,  text: "禁忌",             level: "red"    }
+    ],
+    dialysis:      "禁忌",
+    perioperative: "手術当日中止 / 大手術は前日から検討 / 術後は経口再開＋腎機能安定後に再開",
+    contrast:      "当日中止 / 48 時間後に腎機能確認後再開",
+    sickday:       "中止",
+    risk:          "乳酸アシドーシス（ミトコンドリア複合体Ⅰ阻害 → 乳酸蓄積。脱水・低酸素・腎機能低下で悪化）"
+  },
+  {
+    ingredient: "グリメピリド",
+    class: "SU",
+    renal:    "腎機能低下で低血糖リスク増大（慎重投与）",
+    dialysis: "慎重",
+    sickday:  "中止",
+    risk:     "遷延性低血糖（腎機能低下で代謝物蓄積）"
+  },
+  {
+    ingredient: "グリクラジド",
+    class: "SU",
+    renal:    "腎機能低下で低血糖リスク増大（慎重投与）",
+    dialysis: "慎重",
+    sickday:  "中止",
+    risk:     "遷延性低血糖"
+  },
+  {
+    ingredient: "グリベンクラミド",
+    class: "SU",
+    renal:    "腎機能低下で禁忌に準じる",
+    dialysis: "禁忌",
+    sickday:  "中止",
+    risk:     "遷延性低血糖（長時間作用型）"
+  },
+  {
+    ingredient: "ナテグリニド",
+    class: "グリニド",
+    renal:    "高度腎障害では慎重投与",
+    dialysis: "慎重",
+    sickday:  "中止",
+    risk:     "低血糖（食直前服用必須）"
+  },
+  {
+    ingredient: "ミチグリニド",
+    class: "グリニド",
+    renal:    "高度腎障害では慎重投与",
+    dialysis: "慎重",
+    sickday:  "中止",
+    risk:     "低血糖（食直前服用必須）"
+  },
+  {
+    ingredient: "レパグリニド",
+    class: "グリニド",
+    renal:    "腎機能低下でも比較的使用しやすい（胆汁排泄主体）",
+    dialysis: "可（慎重）",
+    sickday:  "中止",
+    risk:     "低血糖"
+  },
+  {
+    ingredient: "シタグリプチン",
+    class: "DPP-4",
+    renal: [
+      { min: 50, max: 999, text: "50 mg（最大 100 mg）",  level: "green"  },
+      { min: 30, max: 49,  text: "25 mg（最大 50 mg）",   level: "yellow" },
+      { min: 0,  max: 29,  text: "12.5 mg（最大 25 mg）", level: "orange" }
+    ],
+    dialysis: "投与可（12.5 mg、最大 25 mg に減量）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "ビルダグリプチン",
+    class: "DPP-4",
+    renal: [
+      { min: 50, max: 999, text: "50 mg × 2 回/日",     level: "green"  },
+      { min: 0,  max: 49,  text: "50 mg × 1 回/日（減量）", level: "yellow" }
+    ],
+    dialysis: "可（50 mg × 1 回/日）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "アログリプチン",
+    class: "DPP-4",
+    renal: [
+      { min: 60, max: 999, text: "25 mg/日",              level: "green"  },
+      { min: 30, max: 59,  text: "12.5 mg/日（減量）",    level: "yellow" },
+      { min: 0,  max: 29,  text: "6.25 mg/日（減量）",    level: "orange" }
+    ],
+    dialysis: "可（6.25 mg/日）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "リナグリプチン",
+    class: "DPP-4",
+    renal:    "調整不要（胆汁排泄主体）",
+    dialysis: "可",
+    sickday:  "継続可"
+  },
+  {
+    ingredient: "テネリグリプチン",
+    class: "DPP-4",
+    renal:    "調整不要",
+    dialysis: "可",
+    sickday:  "継続可"
+  },
+  {
+    ingredient: "アナグリプチン",
+    class: "DPP-4",
+    renal: [
+      { min: 30, max: 999, text: "100 mg × 2 回/日",     level: "green"  },
+      { min: 0,  max: 29,  text: "100 mg × 1 回/日（減量）", level: "yellow" }
+    ],
+    dialysis: "可（100 mg × 1 回/日）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "サキサグリプチン",
+    class: "DPP-4",
+    renal: [
+      { min: 50, max: 999, text: "5 mg/日",               level: "green"  },
+      { min: 0,  max: 49,  text: "2.5 mg/日（減量）",     level: "yellow" }
+    ],
+    dialysis: "可（2.5 mg/日）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "オマリグリプチン",
+    class: "DPP-4週1",
+    renal: [
+      { min: 50, max: 999, text: "25 mg/週",              level: "green"  },
+      { min: 30, max: 49,  text: "12.5 mg/週（減量）",    level: "yellow" },
+      { min: 0,  max: 29,  text: "慎重投与",               level: "orange" }
+    ],
+    dialysis: "慎重",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "トレラグリプチン",
+    class: "DPP-4週1",
+    renal: [
+      { min: 50, max: 999, text: "100 mg/週",             level: "green"  },
+      { min: 0,  max: 49,  text: "50 mg/週（減量）",      level: "yellow" }
+    ],
+    dialysis: "可（50 mg/週）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "イメグリミン",
+    class: "グリミン",
+    renal: [
+      { min: 45, max: 999, text: "2000 mg/日",            level: "green"  },
+      { min: 15, max: 44,  text: "1000 mg/日（減量）",    level: "yellow" },
+      { min: 10, max: 14,  text: "500 mg/日（減量）",     level: "orange" },
+      { min: 0,  max: 9,   text: "推奨されない",           level: "red"    }
+    ],
+    dialysis: "推奨されない",
+    sickday:  "中止",
+    risk:     "乳酸アシドーシスリスク（メトホルミンとの併用時は特に注意）"
+  },
+  {
+    ingredient: "ダパグリフロジン",
+    class: "SGLT2",
+    start: [
+      { min: 45, max: 999, text: "開始可",                level: "green"  },
+      { min: 25, max: 44,  text: "開始可（効果減弱）",    level: "yellow" },
+      { min: 0,  max: 24,  text: "開始不可",              level: "red"    }
+    ],
+    continue: [
+      { min: 25, max: 999, text: "継続可",                level: "green"  },
+      { min: 0,  max: 24,  text: "原則中止",              level: "red"    }
+    ],
+    dialysis:      "禁忌（血糖管理目的）",
+    perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
+    sickday:       "中止",
+    risk:          "正常血糖 DKA（インスリン低下→グルカゴン増加→ケトン産生亢進。腹痛・悪心・倦怠感は受診）"
+  },
+  {
+    ingredient: "エンパグリフロジン",
+    class: "SGLT2",
+    start: [
+      { min: 45, max: 999, text: "開始可",                level: "green"  },
+      { min: 20, max: 44,  text: "開始可",                level: "yellow" },
+      { min: 0,  max: 19,  text: "開始不可",              level: "red"    }
+    ],
+    continue: [
+      { min: 20, max: 999, text: "継続可",                level: "green"  },
+      { min: 0,  max: 19,  text: "原則中止",              level: "red"    }
+    ],
+    dialysis:      "禁忌（血糖管理目的）",
+    perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
+    sickday:       "中止",
+    risk:          "正常血糖 DKA"
+  },
+  {
+    ingredient: "カナグリフロジン",
+    class: "SGLT2",
+    start: [
+      { min: 45, max: 999, text: "開始可",                level: "green"  },
+      { min: 30, max: 44,  text: "慎重開始",              level: "yellow" },
+      { min: 0,  max: 29,  text: "開始不可",              level: "red"    }
+    ],
+    continue: [
+      { min: 30, max: 999, text: "継続可",                level: "green"  },
+      { min: 0,  max: 29,  text: "原則中止",              level: "red"    }
+    ],
+    dialysis:      "禁忌（血糖管理目的）",
+    perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
+    sickday:       "中止",
+    risk:          "正常血糖 DKA"
+  },
+  {
+    ingredient: "イプラグリフロジン",
+    class: "SGLT2",
+    start: [
+      { min: 45, max: 999, text: "開始可",                level: "green"  },
+      { min: 0,  max: 44,  text: "開始不可",              level: "red"    }
+    ],
+    continue: [
+      { min: 45, max: 999, text: "継続可",                level: "green"  },
+      { min: 0,  max: 44,  text: "原則中止",              level: "red"    }
+    ],
+    dialysis:      "禁忌（血糖管理目的）",
+    perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
+    sickday:       "中止",
+    risk:          "正常血糖 DKA"
+  },
+  {
+    ingredient: "ルセオグリフロジン",
+    class: "SGLT2",
+    start: [
+      { min: 45, max: 999, text: "開始可",                level: "green"  },
+      { min: 0,  max: 44,  text: "開始不可",              level: "red"    }
+    ],
+    continue: [
+      { min: 45, max: 999, text: "継続可",                level: "green"  },
+      { min: 0,  max: 44,  text: "原則中止",              level: "red"    }
+    ],
+    dialysis:      "禁忌（血糖管理目的）",
+    perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
+    sickday:       "中止",
+    risk:          "正常血糖 DKA"
+  },
+  {
+    ingredient: "トホグリフロジン",
+    class: "SGLT2",
+    start: [
+      { min: 45, max: 999, text: "開始可",                level: "green"  },
+      { min: 0,  max: 44,  text: "開始不可",              level: "red"    }
+    ],
+    continue: [
+      { min: 45, max: 999, text: "継続可",                level: "green"  },
+      { min: 0,  max: 44,  text: "原則中止",              level: "red"    }
+    ],
+    dialysis:      "禁忌（血糖管理目的）",
+    perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
+    sickday:       "中止",
+    risk:          "正常血糖 DKA"
+  },
+  {
+    ingredient: "ピオグリタゾン",
+    class: "TZD",
+    renal:    "調整不要",
+    dialysis: "可（慎重）",
+    risk:     "浮腫・心不全増悪リスク。高齢女性で骨折リスク増加（PROactive 解析）"
+  },
+  {
+    ingredient: "セマグルチド（経口）",
+    class: "GLP-1",
+    renal:    "調整不要",
+    dialysis: "慎重",
+    sickday:  "中止",
+    risk:     "悪心・嘔吐（用量依存性）",
+    special:  "起床時空腹で 120 mL 以下の水で服用。服用後 30 分は飲食・他薬不可"
+  }
+];
+
+// ══════════════════════════════════════════════════════
+//  配合剤マスター
+// ══════════════════════════════════════════════════════
+const combinationMaster = [
+  { brand: "イニシンク®",    ingredients: ["シタグリプチン",   "メトホルミン"]      },
+  { brand: "エクメット®",    ingredients: ["ビルダグリプチン", "メトホルミン"]      },
+  { brand: "メタクト®",      ingredients: ["ピオグリタゾン",   "メトホルミン"]      },
+  { brand: "スージャヌ®",    ingredients: ["シタグリプチン",   "イプラグリフロジン"] },
+  { brand: "トラディアンス®", ingredients: ["リナグリプチン",  "エンパグリフロジン"] },
+  { brand: "カナリア®",      ingredients: ["カナグリフロジン", "メトホルミン"]      }
+];
+
+// ══════════════════════════════════════════════════════
+//  ユーティリティ
+// ══════════════════════════════════════════════════════
+const THEME = { green: "theme-green", yellow: "theme-yellow", orange: "theme-orange", red: "theme-red", gray: "theme-gray" };
+const BADGE = { green: "badge-green", yellow: "badge-yellow", orange: "badge-orange", red: "badge-red", gray: "badge-gray" };
+
+function themeClass(level) { return THEME[level] || THEME.gray; }
+function badgeClass(level) { return BADGE[level] || BADGE.gray; }
+
+/** eGFR に対応するレンジエントリを返す */
+function matchRange(ranges, egfr) {
+  if (!Array.isArray(ranges)) return null;
+  return ranges.find(r => egfr >= r.min && egfr <= r.max) || null;
 }
 
-// ── 各薬剤の判定関数 ────────────────────────────────
-
-function judgeMetformin(egfr, dialysis) {
-  if (dialysis) return { color:'red', status:'禁忌', dose:'投与不可', detail:'透析患者への投与は禁忌です。' };
-  if (egfr >= 60) return { color:'green',  status:'標準',  dose:'最大 2250 mg/日', detail:'通常用量で使用可能です。' };
-  if (egfr >= 45) return { color:'yellow', status:'減量',  dose:'最大 1500 mg/日', detail:'腎機能に応じて減量してください。' };
-  if (egfr >= 30) return { color:'orange', status:'慎重',  dose:'最大 750 mg/日',  detail:'慎重投与。定期的な腎機能モニタリングが必要です。' };
-  return { color:'red', status:'禁忌', dose:'投与不可', detail:'eGFR 30 未満では乳酸アシドーシスリスクのため禁忌です。' };
+/** 最も重篤な level を返す（SGLT2 の開始/継続を合成するため） */
+function worstLevel(levels) {
+  const order = ["red", "orange", "yellow", "green"];
+  for (const l of order) {
+    if (levels.includes(l)) return l;
+  }
+  return "gray";
 }
 
-function judgeSitagliptin(egfr, dialysis) {
-  if (dialysis) return { color:'yellow', status:'減量', dose:'12.5 mg（最大 25 mg）', detail:'透析患者も投与可。用量調整が必要です。' };
-  if (egfr >= 50) return { color:'green',  status:'標準', dose:'50 mg（最大 100 mg）', detail:'通常用量で使用可能です。' };
-  if (egfr >= 30) return { color:'yellow', status:'減量', dose:'25 mg（最大 50 mg）',  detail:'腎機能に応じて減量してください。' };
-  return { color:'orange', status:'減量', dose:'12.5 mg（最大 25 mg）', detail:'eGFR 30 未満では最小用量に減量してください。' };
+// ══════════════════════════════════════════════════════
+//  カード HTML 生成
+// ══════════════════════════════════════════════════════
+
+function renderRenalText(item, egfr, dialysis) {
+  if (dialysis) {
+    const d = item.dialysis || "情報なし";
+    const lvl = /禁忌/.test(d) ? "red" : /慎重/.test(d) ? "orange" : /推奨されない/.test(d) ? "red" : "yellow";
+    return { level: lvl, html: `<p><strong>透析：</strong>${d}</p>` };
+  }
+  if (Array.isArray(item.renal)) {
+    const r = matchRange(item.renal, egfr);
+    if (r) return { level: r.level, html: `<p><strong>用量目安：</strong>${r.text}</p>` };
+  }
+  if (typeof item.renal === "string") {
+    const lvl = /禁忌/.test(item.renal) ? "red" : /慎重/.test(item.renal) ? "orange" : "green";
+    return { level: lvl, html: `<p><strong>腎機能：</strong>${item.renal}</p>` };
+  }
+  return { level: "gray", html: `<p>情報なし</p>` };
 }
 
-function judgeTradjenta(egfr, dialysis) {
-  return { color:'green', status:'標準', dose:'5 mg/日（調整不要）', detail:'腎機能による用量調整は不要です。透析患者にも投与可能です。' };
-}
-
-function judgeTenelia(egfr, dialysis) {
-  return { color:'green', status:'標準', dose:'20 mg/日（調整不要）', detail:'腎機能による用量調整は不要です。透析患者にも投与可能です。' };
-}
-
-function judgeZafatek(egfr, dialysis) {
-  if (dialysis) return { color:'yellow', status:'減量', dose:'50 mg/週（透析・減量）', detail:'透析患者も投与可。50 mg/週に減量してください。' };
-  if (egfr >= 50) return { color:'green',  status:'標準', dose:'100 mg/週', detail:'通常用量で使用可能です（週1回投与）。' };
-  return { color:'yellow', status:'減量', dose:'50 mg/週', detail:'eGFR 50 未満では 50 mg/週に減量してください。' };
-}
-
-function judgeMarizerb(egfr, dialysis) {
-  if (dialysis) return { color:'orange', status:'慎重', dose:'慎重投与', detail:'透析患者への投与は慎重に行ってください。' };
-  if (egfr >= 50) return { color:'green',  status:'標準', dose:'25 mg/週', detail:'通常用量で使用可能です（週1回投与）。' };
-  if (egfr >= 30) return { color:'yellow', status:'減量', dose:'12.5 mg/週', detail:'eGFR 30〜49 では 12.5 mg/週に減量してください。' };
-  return { color:'orange', status:'慎重', dose:'慎重投与', detail:'eGFR 30 未満では慎重投与。リスクとベネフィットを慎重に評価してください。' };
-}
-
-function judgeTwiMeeg(egfr, dialysis) {
-  if (dialysis) return { color:'red', status:'推奨されない', dose:'投与推奨されない', detail:'透析患者への投与は推奨されません。' };
-  if (egfr >= 45) return { color:'green',  status:'標準', dose:'2000 mg/日', detail:'通常用量で使用可能です（2025年改訂基準）。' };
-  if (egfr >= 15) return { color:'yellow', status:'減量', dose:'1000 mg/日', detail:'eGFR 15〜44 では 1000 mg/日に減量してください。' };
-  if (egfr >= 10) return { color:'orange', status:'慎重', dose:'500 mg/日', detail:'eGFR 10〜14 では 500 mg/日。慎重投与が必要です。' };
-  return { color:'red', status:'推奨されない', dose:'投与推奨されない', detail:'eGFR 10 未満では投与は推奨されません。' };
-}
-
-// SGLT2 阻害薬（血糖管理目的）
-function judgeSGLT2(egfr, dialysis) {
-  const drugs = [
-    {
-      name: 'フォシーガ', generic: 'ダパグリフロジン',
-      start: egfr >= 45 ? { color:'green', text:'開始可' }
-           : egfr >= 25 ? { color:'yellow', text:'開始可（効果減弱）' }
-           : { color:'red', text:'開始不可' },
-      cont:  egfr >= 25 ? { color:'green', text:'継続可' }
-           : { color:'red', text:'原則中止' }
-    },
-    {
-      name: 'ジャディアンス', generic: 'エンパグリフロジン',
-      start: egfr >= 45 ? { color:'green', text:'開始可' }
-           : egfr >= 20 ? { color:'yellow', text:'開始可' }
-           : { color:'red', text:'開始不可' },
-      cont:  egfr >= 20 ? { color:'green', text:'継続可' }
-           : { color:'red', text:'原則中止' }
-    },
-    {
-      name: 'カナグル', generic: 'カナグリフロジン',
-      start: egfr >= 45 ? { color:'green', text:'開始可' }
-           : egfr >= 30 ? { color:'orange', text:'慎重可' }
-           : { color:'red', text:'開始不可' },
-      cont:  egfr >= 30 ? { color:'green', text:'継続可' }
-           : { color:'red', text:'原則中止' }
-    },
-    {
-      name: 'スーグラ・ルセフィ・デベルザ', generic: 'イプラグリフロジン他',
-      start: egfr >= 45 ? { color:'green', text:'開始可' }
-           : { color:'red', text:'開始不可' },
-      cont:  egfr >= 45 ? { color:'green', text:'継続可' }
-           : { color:'red', text:'原則中止' }
-    }
-  ];
+function renderSGLT2Card(item, egfr, dialysis) {
+  let startEntry, contEntry, overallLevel;
 
   if (dialysis) {
-    drugs.forEach(d => {
-      d.start = { color:'red', text:'開始不可' };
-      d.cont  = { color:'red', text:'原則中止' };
-    });
+    const d = item.dialysis || "禁忌";
+    overallLevel = "red";
+    startEntry   = { text: d, level: "red" };
+    contEntry    = { text: d, level: "red" };
+  } else {
+    startEntry   = matchRange(item.start,    egfr) || { text: "情報なし", level: "gray" };
+    contEntry    = matchRange(item.continue, egfr) || { text: "情報なし", level: "gray" };
+    overallLevel = worstLevel([startEntry.level, contEntry.level]);
   }
-  return drugs;
-}
 
-// ── カード生成ヘルパー ────────────────────────────────
+  const extras = buildExtras(item, egfr, dialysis);
 
-function makeDrugCard(name, sub, result) {
   return `
-  <div class="drug-card ${theme(result.color)}">
+  <div class="drug-card ${themeClass(overallLevel)}">
     <div class="drug-header">
       <div>
-        <div class="drug-name">${name}</div>
-        ${sub ? `<div class="drug-sub">${sub}</div>` : ''}
+        <div class="drug-name">${item.ingredient}</div>
+        <div class="drug-sub">${item.class}</div>
       </div>
-      <span class="status-badge ${badge(result.color)}">${result.status}</span>
+      <span class="status-badge ${badgeClass(startEntry.level)}">${startEntry.text}</span>
     </div>
     <div class="drug-detail">
-      <p><strong>用量目安：</strong>${result.dose}</p>
-      <p>${result.detail}</p>
+      <p><strong>開始：</strong><span class="lv-${startEntry.level}">${startEntry.text}</span></p>
+      <p><strong>継続：</strong><span class="lv-${contEntry.level}">${contEntry.text}</span></p>
+      ${extras}
     </div>
   </div>`;
 }
 
-function makeSGLT2Cards(drugs) {
-  return drugs.map(d => {
-    const overallColor = d.start.color === 'red' ? 'red'
-      : d.start.color === 'orange' ? 'orange'
-      : d.cont.color  === 'red'    ? 'yellow'
-      : 'green';
-    return `
-    <div class="drug-card ${theme(overallColor)}">
-      <div class="drug-header">
-        <div>
-          <div class="drug-name">${d.name}</div>
-          <div class="drug-sub">${d.generic}</div>
-        </div>
-        <span class="status-badge ${badge(d.start.color)}">${d.start.text}</span>
-      </div>
-      <div class="drug-detail">
-        <p><strong>開始：</strong><span style="color:var(--${d.start.color === 'green' ? 'green' : d.start.color === 'yellow' ? 'yellow' : d.start.color === 'orange' ? 'orange' : 'red'})">${d.start.text}</span></p>
-        <p><strong>継続：</strong><span style="color:var(--${d.cont.color === 'green' ? 'green' : 'red'})">${d.cont.text}</span></p>
-      </div>
-    </div>`;
-  }).join('');
+function buildExtras(item, egfr, dialysis) {
+  let html = "";
+  if (item.perioperative) html += `<p><strong>周術期：</strong>${item.perioperative}</p>`;
+  if (item.contrast)      html += `<p><strong>造影剤：</strong>${item.contrast}</p>`;
+  if (item.sickday)       html += `<p><strong>シックデイ：</strong>${item.sickday}</p>`;
+  if (item.risk)          html += `<p><strong>重大副作用：</strong>${item.risk}</p>`;
+  if (item.special)       html += `<p><strong>特記：</strong>${item.special}</p>`;
+  return html;
 }
 
-// ── メイン計算処理 ────────────────────────────────────
+function renderIngredientCard(item, egfr, dialysis) {
+  if (item.class === "SGLT2") return renderSGLT2Card(item, egfr, dialysis);
 
-function calculate() {
-  const egfrInput = document.getElementById('egfr-input');
-  const dialysis  = document.getElementById('dialysis-check').checked;
-  const egfr      = parseFloat(egfrInput.value);
+  const { level, html: renalHtml } = renderRenalText(item, egfr, dialysis);
+  const extras = buildExtras(item, egfr, dialysis);
 
-  if (!dialysis && (isNaN(egfr) || egfr < 0 || egfr > 200)) {
-    egfrInput.style.borderColor = '#c62828';
-    egfrInput.focus();
-    return;
+  const statusLabel = level === "green" ? "標準"
+    : level === "yellow" ? "減量"
+    : level === "orange" ? "慎重"
+    : level === "red"    ? "禁忌"
+    : "確認";
+
+  return `
+  <div class="drug-card ${themeClass(level)}">
+    <div class="drug-header">
+      <div>
+        <div class="drug-name">${item.ingredient}</div>
+        <div class="drug-sub">${item.class}</div>
+      </div>
+      <span class="status-badge ${badgeClass(level)}">${statusLabel}</span>
+    </div>
+    <div class="drug-detail">
+      ${renalHtml}
+      ${extras}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  配合剤セクション
+// ══════════════════════════════════════════════════════
+
+function renderCombinationSection(egfr, dialysis) {
+  let html = `<div class="section-title">配合剤（成分分解表示）</div>`;
+
+  for (const combo of combinationMaster) {
+    const resolved = combo.ingredients.map(name =>
+      ingredientMaster.find(m => m.ingredient === name)
+    ).filter(Boolean);
+
+    if (resolved.length === 0) continue;
+
+    html += `
+    <div class="combo-wrapper">
+      <div class="combo-brand-label">${combo.brand}（${combo.ingredients.join(" + ")}）</div>
+      ${resolved.map(item => renderIngredientCard(item, egfr, dialysis)).join("")}
+    </div>`;
   }
-  egfrInput.style.borderColor = '';
+  return html;
+}
 
-  const effectiveEgfr = dialysis ? 0 : egfr;
+// ══════════════════════════════════════════════════════
+//  クラス別グループ表示
+// ══════════════════════════════════════════════════════
 
-  // 判定
-  const metformin   = judgeMetformin(effectiveEgfr, dialysis);
-  const sitagliptin = judgeSitagliptin(effectiveEgfr, dialysis);
-  const tradjenta   = judgeTradjenta(effectiveEgfr, dialysis);
-  const tenelia     = judgeTenelia(effectiveEgfr, dialysis);
-  const zafatek     = judgeZafatek(effectiveEgfr, dialysis);
-  const marizerb    = judgeMarizerb(effectiveEgfr, dialysis);
-  const twiMeeg     = judgeTwiMeeg(effectiveEgfr, dialysis);
-  const sglt2drugs  = judgeSGLT2(effectiveEgfr, dialysis);
+const CLASS_ORDER = [
+  { key: "ビグアナイド",  label: "ビグアナイド系" },
+  { key: "SU",           label: "SU 薬（スルホニルウレア）" },
+  { key: "グリニド",     label: "グリニド薬（速効型インスリン分泌促進）" },
+  { key: "DPP-4",        label: "DPP-4 阻害薬（1 日 1 回）" },
+  { key: "DPP-4週1",     label: "DPP-4 阻害薬（週 1 回）" },
+  { key: "グリミン",     label: "イミダゾリン系（グリミン）" },
+  { key: "SGLT2",        label: "SGLT2 阻害薬（血糖管理目的）" },
+  { key: "TZD",          label: "チアゾリジン系（TZD）" },
+  { key: "GLP-1",        label: "GLP-1 受容体作動薬（経口）" }
+];
 
-  const egfrLabel = dialysis ? '透析' : `eGFR ${egfr} mL/min/1.73m²`;
+function renderAllClasses(egfr, dialysis) {
+  let html = "";
+  for (const cls of CLASS_ORDER) {
+    const items = ingredientMaster.filter(m => m.class === cls.key);
+    if (items.length === 0) continue;
 
-  // 周術期
-  const periop = `
+    html += `<div class="section-title">${cls.label}</div>`;
+
+    if (cls.key === "SGLT2") {
+      html += `<p class="sglt2-note">※ 血糖管理目的を前提としています。心不全・CKD 適応は別基準を参照してください。</p>`;
+    }
+    if (cls.key === "DPP-4" || cls.key === "DPP-4週1") {
+      html += `<p class="dpp4-note">※ DPP-4 阻害薬は脱水がなければシックデイでも原則継続可です。</p>`;
+    }
+
+    html += items.map(item => renderIngredientCard(item, egfr, dialysis)).join("");
+  }
+  return html;
+}
+
+// ══════════════════════════════════════════════════════
+//  安全管理情報ブロック
+// ══════════════════════════════════════════════════════
+
+function renderSafetyBlocks() {
+  return `
+  <div class="section-title">安全管理情報</div>
+
   <div class="info-block">
     <div class="info-block-header">🔪 周術期管理</div>
     <div class="info-block-body">
@@ -193,10 +500,8 @@ function calculate() {
         <li>術後は経口摂取安定後に再開</li>
       </ul>
     </div>
-  </div>`;
+  </div>
 
-  // 造影剤
-  const contrast = `
   <div class="info-block">
     <div class="info-block-header">💉 造影剤使用時</div>
     <div class="info-block-body">
@@ -206,10 +511,8 @@ function calculate() {
         <li>投与後 48 時間は休薬し、腎機能を確認してから再開</li>
       </ul>
     </div>
-  </div>`;
+  </div>
 
-  // シックデイ
-  const sickday = `
   <div class="info-block">
     <div class="info-block-header">🤒 シックデイ管理</div>
     <div class="info-block-body">
@@ -217,8 +520,8 @@ function calculate() {
       <ul>
         <li>メトホルミン</li>
         <li>SGLT2 阻害薬</li>
-        <li>ツイミーグ</li>
-        <li>リベルサス（GLP-1 受容体作動薬）</li>
+        <li>イメグリミン（ツイミーグ）</li>
+        <li>セマグルチド経口（リベルサス）</li>
         <li>SU 薬</li>
         <li>グリニド薬</li>
       </ul>
@@ -227,10 +530,8 @@ function calculate() {
         <li>DPP-4 阻害薬（脱水がなければ継続可）</li>
       </ul>
     </div>
-  </div>`;
+  </div>
 
-  // 病態解説（折りたたみ）
-  const pathophysiology = `
   <details>
     <summary>病態解説（折りたたみ）</summary>
     <div class="details-body">
@@ -247,50 +548,98 @@ function calculate() {
         <li>腹痛・悪心・倦怠感が出現した場合は速やかに受診</li>
       </ul>
     </div>
-  </details>`;
+  </details>
 
-  // 免責
-  const disclaimer = `
   <div class="disclaimer">
     <strong>【免責事項】</strong><br>
-    本ツールは薬剤師の意思決定支援を目的としています。最終判断は必ず主治医の指示に従い、最新の添付文書・ガイドラインを確認してください。
+    本ツールは薬剤師の意思決定支援を目的としています（血糖管理目的を前提）。<br>
+    最終判断は必ず主治医の指示に従い、最新の添付文書・ガイドラインを確認してください。<br>
+    個人情報は一切保存・送信しません。
   </div>`;
+}
 
-  // 出力
+// ══════════════════════════════════════════════════════
+//  メイン計算処理
+// ══════════════════════════════════════════════════════
+
+function calculate() {
+  const egfrInput = document.getElementById('egfr-input');
+  const dialysis  = document.getElementById('dialysis-check').checked;
+  const egfr      = parseFloat(egfrInput.value);
+
+  if (!dialysis && (isNaN(egfr) || egfr < 0 || egfr > 200)) {
+    egfrInput.style.borderColor = '#c62828';
+    egfrInput.focus();
+    return;
+  }
+  egfrInput.style.borderColor = '';
+
+  const effectiveEgfr = dialysis ? 0 : egfr;
+  const egfrLabel     = dialysis ? '透析' : `eGFR ${egfr} mL/min/1.73m²`;
+
   const resultsEl = document.getElementById('results');
   resultsEl.innerHTML = `
-    <p style="font-size:.82rem;color:var(--gray);margin-bottom:12px">判定条件：<strong>${egfrLabel}</strong></p>
-
-    <div class="section-title">ビグアナイド系</div>
-    ${makeDrugCard('メトホルミン', 'グルコファージ・メトグルコ 他', metformin)}
-
-    <div class="section-title">DPP-4 阻害薬</div>
-    ${makeDrugCard('シタグリプチン', 'ジャヌビア／グラクティブ', sitagliptin)}
-    ${makeDrugCard('リナグリプチン', 'トラゼンタ', tradjenta)}
-    ${makeDrugCard('テネリグリプチン', 'テネリア', tenelia)}
-    ${makeDrugCard('トレラグリプチン（週1回）', 'ザファテック', zafatek)}
-    ${makeDrugCard('オマリグリプチン（週1回）', 'マリゼブ', marizerb)}
-
-    <div class="section-title">イミダゾリン系</div>
-    ${makeDrugCard('イメグリミン', 'ツイミーグ（2025 改訂）', twiMeeg)}
-
-    <div class="section-title">SGLT2 阻害薬（血糖管理目的）</div>
-    <p class="sglt2-note">※ 血糖管理目的を前提としています。心不全・CKD 適応は別基準を参照してください。</p>
-    ${makeSGLT2Cards(sglt2drugs)}
-
-    <div class="section-title">安全管理情報</div>
-    ${periop}
-    ${contrast}
-    ${sickday}
-    ${pathophysiology}
-    ${disclaimer}
+    <p style="font-size:.82rem;color:var(--gray);margin-bottom:12px">
+      判定条件：<strong>${egfrLabel}</strong>
+    </p>
+    ${renderAllClasses(effectiveEgfr, dialysis)}
+    ${renderCombinationSection(effectiveEgfr, dialysis)}
+    ${renderSafetyBlocks()}
   `;
 
   resultsEl.style.display = 'block';
   resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── イベント登録 ──────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  追加スタイル（動的インジェクション）
+// ══════════════════════════════════════════════════════
+
+(function injectDynamicStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .lv-green  { color: var(--green);  font-weight:700; }
+    .lv-yellow { color: var(--yellow); font-weight:700; }
+    .lv-orange { color: var(--orange); font-weight:700; }
+    .lv-red    { color: var(--red);    font-weight:700; }
+    .lv-gray   { color: var(--gray);   font-weight:700; }
+
+    .dpp4-note {
+      font-size: .75rem;
+      color: var(--blue-mid);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .combo-wrapper {
+      margin-bottom: 18px;
+    }
+
+    .combo-brand-label {
+      background: var(--blue-dark);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px 8px 0 0;
+      margin-bottom: -4px;
+    }
+
+    .combo-wrapper .drug-card:first-of-type {
+      border-radius: 0 0 0 0;
+    }
+
+    .combo-wrapper .drug-card:last-of-type {
+      border-radius: 0 0 var(--radius) var(--radius);
+      margin-bottom: 0;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// ══════════════════════════════════════════════════════
+//  イベント登録
+// ══════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calc-btn').addEventListener('click', calculate);
@@ -299,9 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') calculate();
   });
 
-  document.getElementById('dialysis-check').addEventListener('change', function() {
+  document.getElementById('dialysis-check').addEventListener('change', function () {
     const input = document.getElementById('egfr-input');
-    input.disabled = this.checked;
+    input.disabled    = this.checked;
     input.style.opacity = this.checked ? '0.4' : '1';
     if (this.checked) input.value = '';
   });
