@@ -2,7 +2,7 @@
 
 /* =====================================================
    Dr.いわたつ 糖尿病経口薬 腎機能サポートツール
-   script.js  ver3.0  (商品名完全網羅版)
+   script.js  ver4.0  (腎機能別投与量 dm-memo.com 準拠修正版)
    2026-02
 ===================================================== */
 
@@ -15,10 +15,10 @@ const ingredientMaster = [
     brands: ["メトグルコ®", "グリコラン®", "ジベトス®"],
     class: "ビグアナイド",
     renal: [
-      { min: 60,  max: 999, text: "最大 2250 mg/日", level: "green"  },
-      { min: 45,  max: 59,  text: "最大 1500 mg/日", level: "yellow" },
-      { min: 30,  max: 44,  text: "最大 750 mg/日",  level: "orange" },
-      { min: 0,   max: 29,  text: "禁忌",             level: "red"    }
+      { min: 60,  max: 999, text: "500〜2250 mg/日（最大 2250 mg）", level: "green"  },
+      { min: 45,  max: 59,  text: "最大 1500 mg/日（減量）",          level: "yellow" },
+      { min: 30,  max: 44,  text: "最大 750 mg/日（減量）",           level: "orange" },
+      { min: 0,   max: 29,  text: "禁忌",                             level: "red"    }
     ],
     dialysis:      "禁忌",
     perioperative: "手術当日中止 / 大手術は前日から検討 / 術後は経口再開＋腎機能安定後に再開",
@@ -30,8 +30,12 @@ const ingredientMaster = [
     ingredient: "グリメピリド",
     brands: ["アマリール®"],
     class: "SU",
-    renal:    "腎機能低下で低血糖リスク増大（慎重投与）",
-    dialysis: "慎重",
+    renal: [
+      { min: 60,  max: 999, text: "0.5〜2 mg（著者変更）",  level: "green"  },
+      { min: 30,  max: 59,  text: "慎重投与（低血糖リスク増大）", level: "orange" },
+      { min: 0,   max: 29,  text: "禁忌",                    level: "red"    }
+    ],
+    dialysis: "禁忌",
     sickday:  "中止",
     risk:     "遷延性低血糖（腎機能低下で代謝物蓄積）"
   },
@@ -39,8 +43,12 @@ const ingredientMaster = [
     ingredient: "グリクラジド",
     brands: ["グリミクロン®"],
     class: "SU",
-    renal:    "腎機能低下で低血糖リスク増大（慎重投与）",
-    dialysis: "慎重",
+    renal: [
+      { min: 60,  max: 999, text: "20〜80 mg（著者変更）",   level: "green"  },
+      { min: 30,  max: 59,  text: "慎重投与（低血糖リスク増大）", level: "orange" },
+      { min: 0,   max: 29,  text: "禁忌",                    level: "red"    }
+    ],
+    dialysis: "禁忌",
     sickday:  "中止",
     risk:     "遷延性低血糖"
   },
@@ -48,16 +56,22 @@ const ingredientMaster = [
     ingredient: "グリベンクラミド",
     brands: ["オイグルコン®", "ダオニール®"],
     class: "SU",
-    renal:    "腎機能低下で禁忌に準じる",
+    renal: [
+      { min: 60,  max: 999, text: "慎重投与",  level: "orange" },
+      { min: 0,   max: 59,  text: "禁忌（腎機能低下で活性代謝物蓄積）", level: "red" }
+    ],
     dialysis: "禁忌",
     sickday:  "中止",
-    risk:     "遷延性低血糖（長時間作用型）"
+    risk:     "遷延性低血糖（長時間作用型・活性代謝物蓄積）"
   },
   {
     ingredient: "ナテグリニド",
     brands: ["スターシス®", "ファスティック®"],
     class: "グリニド",
-    renal:    "高度腎障害では慎重投与",
+    renal: [
+      { min: 60,  max: 999, text: "1回 90〜120 mg（食直前）",          level: "green"  },
+      { min: 0,   max: 59,  text: "慎重投与（低血糖リスク増大）",       level: "orange" }
+    ],
     dialysis: "慎重",
     sickday:  "中止",
     risk:     "低血糖（食直前服用必須）"
@@ -66,35 +80,34 @@ const ingredientMaster = [
     ingredient: "ミチグリニド",
     brands: ["グルファスト®"],
     class: "グリニド",
-    renal:    "高度腎障害では慎重投与",
+    renal: [
+      { min: 60,  max: 999, text: "1回 10 mg（食直前）",               level: "green"  },
+      { min: 30,  max: 59,  text: "慎重投与（1回 2.5〜10 mg）",        level: "orange" },
+      { min: 0,   max: 29,  text: "慎重投与（さらに減量）",             level: "orange" }
+    ],
     dialysis: "慎重",
     sickday:  "中止",
     risk:     "低血糖（食直前服用必須）"
   },
   {
     ingredient: "レパグリニド",
-    brands: ["シュアポスト®"],
+    brands: ["シュアポスト®（販売中止）"],
     class: "グリニド",
-    renal:    "腎機能低下でも比較的使用しやすい（胆汁排泄主体）",
-    dialysis: "可（慎重）",
+    renal: [
+      { min: 0,   max: 999, text: "1回 0.25〜1 mg（慎重投与）",        level: "orange" }
+    ],
+    dialysis: "慎重",
     sickday:  "中止",
-    risk:     "低血糖"
+    risk:     "低血糖（販売中止。胆汁排泄主体で比較的使用しやすい）"
   },
   {
     ingredient: "ボグリボース",
     brands: ["ベイスン®"],
     class: "αGI",
-    renal:    "調整不要（腸管内作用・吸収ほぼなし）",
-    dialysis: "可",
-    sickday:  "中止（食事摂取不良時）",
-    risk:     "腸閉塞・肝機能障害（まれ）"
-  },
-  {
-    ingredient: "アカルボース",
-    brands: ["グルコバイ®"],
-    class: "αGI",
-    renal:    "高度腎障害（Cr 2.0 以上）では禁忌",
-    dialysis: "禁忌",
+    renal: [
+      { min: 0,   max: 999, text: "1回 0.2〜0.3 mg（慎重投与）",      level: "orange" }
+    ],
+    dialysis: "慎重",
     sickday:  "中止（食事摂取不良時）",
     risk:     "腸閉塞・肝機能障害（まれ）"
   },
@@ -102,21 +115,34 @@ const ingredientMaster = [
     ingredient: "ミグリトール",
     brands: ["セイブル®"],
     class: "αGI",
-    renal:    "高度腎障害では禁忌（腎排泄型）",
-    dialysis: "禁忌",
+    renal: [
+      { min: 0,   max: 999, text: "1回 50〜75 mg（慎重投与）",         level: "orange" }
+    ],
+    dialysis: "慎重",
     sickday:  "中止（食事摂取不良時）",
-    risk:     "腸閉塞（まれ）"
+    risk:     "腸閉塞（まれ）。腎排泄型のため高度腎障害では特に注意"
+  },
+  {
+    ingredient: "アカルボース",
+    brands: ["グルコバイ®（販売中止）"],
+    class: "αGI",
+    renal: [
+      { min: 0,   max: 999, text: "1回 50〜100 mg（慎重投与）",        level: "orange" }
+    ],
+    dialysis: "慎重",
+    sickday:  "中止（食事摂取不良時）",
+    risk:     "腸閉塞・肝機能障害（まれ）。販売中止"
   },
   {
     ingredient: "シタグリプチン",
     brands: ["ジャヌビア®", "グラクティブ®"],
     class: "DPP-4",
     renal: [
-      { min: 50, max: 999, text: "50 mg（最大 100 mg）",  level: "green"  },
-      { min: 30, max: 49,  text: "25 mg（最大 50 mg）",   level: "yellow" },
-      { min: 0,  max: 29,  text: "12.5 mg（最大 25 mg）", level: "orange" }
+      { min: 50, max: 999, text: "50〜100 mg/日",          level: "green"  },
+      { min: 30, max: 49,  text: "25〜50 mg/日（減量）",   level: "yellow" },
+      { min: 0,  max: 29,  text: "12.5〜25 mg/日（減量）", level: "orange" }
     ],
-    dialysis: "投与可（12.5 mg、最大 25 mg に減量）",
+    dialysis: "可（12.5〜25 mg/日に減量）",
     sickday:  "原則継続可（脱水なければ）"
   },
   {
@@ -124,8 +150,8 @@ const ingredientMaster = [
     brands: ["エクア®"],
     class: "DPP-4",
     renal: [
-      { min: 50, max: 999, text: "50 mg × 2 回/日",          level: "green"  },
-      { min: 0,  max: 49,  text: "50 mg × 1 回/日（減量）",  level: "yellow" }
+      { min: 50, max: 999, text: "50 mg × 2 回/日（計 100 mg）",  level: "green"  },
+      { min: 0,  max: 49,  text: "50 mg × 1 回/日（減量）",       level: "yellow" }
     ],
     dialysis: "可（50 mg × 1 回/日）",
     sickday:  "原則継続可（脱水なければ）"
@@ -140,14 +166,15 @@ const ingredientMaster = [
       { min: 0,  max: 29,  text: "6.25 mg/日（減量）",    level: "orange" }
     ],
     dialysis: "可（6.25 mg/日）",
-    sickday:  "原則継続可（脱水なければ）"
+    sickday:  "原則継続可（脱水なければ）",
+    note:     "eGFR 45〜60 では 12.5 mg/日、eGFR 30〜45 では 12.5 mg/日、eGFR < 30 では 6.25 mg/日"
   },
   {
     ingredient: "サキサグリプチン",
     brands: ["オングリザ®"],
     class: "DPP-4",
     renal: [
-      { min: 50, max: 999, text: "5 mg/日",               level: "green"  },
+      { min: 50, max: 999, text: "2.5〜5 mg/日",          level: "green"  },
       { min: 0,  max: 49,  text: "2.5 mg/日（減量）",     level: "yellow" }
     ],
     dialysis: "可（2.5 mg/日）",
@@ -158,8 +185,8 @@ const ingredientMaster = [
     brands: ["スイニー®"],
     class: "DPP-4",
     renal: [
-      { min: 30, max: 999, text: "100 mg × 2 回/日",          level: "green"  },
-      { min: 0,  max: 29,  text: "100 mg × 1 回/日（減量）",  level: "yellow" }
+      { min: 45, max: 999, text: "200〜400 mg/日（2回分服）",     level: "green"  },
+      { min: 0,  max: 44,  text: "100 mg × 1 回/日（減量）",     level: "yellow" }
     ],
     dialysis: "可（100 mg × 1 回/日）",
     sickday:  "原則継続可（脱水なければ）"
@@ -181,26 +208,26 @@ const ingredientMaster = [
     sickday:  "継続可"
   },
   {
-    ingredient: "オマリグリプチン",
-    brands: ["マリゼブ®"],
-    class: "DPP-4週1",
-    renal: [
-      { min: 50, max: 999, text: "25 mg/週",              level: "green"  },
-      { min: 30, max: 49,  text: "12.5 mg/週（減量）",    level: "yellow" },
-      { min: 0,  max: 29,  text: "慎重投与",               level: "orange" }
-    ],
-    dialysis: "慎重",
-    sickday:  "原則継続可（脱水なければ）"
-  },
-  {
     ingredient: "トレラグリプチン",
     brands: ["ザファテック®"],
     class: "DPP-4週1",
     renal: [
-      { min: 50, max: 999, text: "100 mg/週",             level: "green"  },
-      { min: 0,  max: 49,  text: "50 mg/週（減量）",      level: "yellow" }
+      { min: 45, max: 999, text: "100 mg/週",                level: "green"  },
+      { min: 30, max: 44,  text: "50 mg/週（減量）",          level: "yellow" },
+      { min: 0,  max: 29,  text: "25 mg/週（減量）",          level: "orange" }
     ],
-    dialysis: "可（50 mg/週）",
+    dialysis: "可（25 mg/週）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "オマリグリプチン",
+    brands: ["マリゼブ®"],
+    class: "DPP-4週1",
+    renal: [
+      { min: 45, max: 999, text: "25 mg/週",                 level: "green"  },
+      { min: 0,  max: 44,  text: "12.5 mg/週（減量）",       level: "yellow" }
+    ],
+    dialysis: "可（12.5 mg/週）",
     sickday:  "原則継続可（脱水なければ）"
   },
   {
@@ -208,12 +235,12 @@ const ingredientMaster = [
     brands: ["ツイミーグ®"],
     class: "グリミン",
     renal: [
-      { min: 45, max: 999, text: "2000 mg/日",            level: "green"  },
-      { min: 15, max: 44,  text: "1000 mg/日（減量）",    level: "yellow" },
-      { min: 10, max: 14,  text: "500 mg/日（減量）",     level: "orange" },
-      { min: 0,  max: 9,   text: "推奨されない",           level: "red"    }
+      { min: 45, max: 999, text: "2000 mg/日（2回分服）",   level: "green"  },
+      { min: 30, max: 44,  text: "1000 mg/日（減量）",      level: "yellow" },
+      { min: 15, max: 29,  text: "1000 mg/日（慎重）",      level: "orange" },
+      { min: 0,  max: 14,  text: "禁忌（推奨されない）",    level: "red"    }
     ],
-    dialysis: "推奨されない",
+    dialysis: "禁忌（推奨されない）",
     sickday:  "中止",
     risk:     "乳酸アシドーシスリスク（メトホルミンとの併用時は特に注意）"
   },
@@ -222,13 +249,13 @@ const ingredientMaster = [
     brands: ["フォシーガ®"],
     class: "SGLT2",
     start: [
-      { min: 45, max: 999, text: "開始可",                level: "green"  },
-      { min: 25, max: 44,  text: "開始可（効果減弱）",    level: "yellow" },
-      { min: 0,  max: 24,  text: "開始不可",              level: "red"    }
+      { min: 45, max: 999, text: "開始可（5〜10 mg）",          level: "green"  },
+      { min: 25, max: 44,  text: "開始可（心不全・CKD 適応のみ）", level: "yellow" },
+      { min: 0,  max: 24,  text: "開始不可（血糖管理目的）",     level: "red"    }
     ],
     continue: [
-      { min: 25, max: 999, text: "継続可",                level: "green"  },
-      { min: 0,  max: 24,  text: "原則中止",              level: "red"    }
+      { min: 25, max: 999, text: "継続可",                      level: "green"  },
+      { min: 0,  max: 24,  text: "原則中止",                    level: "red"    }
     ],
     dialysis:      "禁忌（血糖管理目的）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
@@ -240,13 +267,13 @@ const ingredientMaster = [
     brands: ["ジャディアンス®"],
     class: "SGLT2",
     start: [
-      { min: 45, max: 999, text: "開始可",                level: "green"  },
-      { min: 20, max: 44,  text: "開始可",                level: "yellow" },
-      { min: 0,  max: 19,  text: "開始不可",              level: "red"    }
+      { min: 45, max: 999, text: "開始可（10〜25 mg）",        level: "green"  },
+      { min: 20, max: 44,  text: "開始可（心不全・CKD 適応のみ）", level: "yellow" },
+      { min: 0,  max: 19,  text: "開始不可",                   level: "red"    }
     ],
     continue: [
-      { min: 20, max: 999, text: "継続可",                level: "green"  },
-      { min: 0,  max: 19,  text: "原則中止",              level: "red"    }
+      { min: 20, max: 999, text: "継続可",                     level: "green"  },
+      { min: 0,  max: 19,  text: "原則中止",                   level: "red"    }
     ],
     dialysis:      "禁忌（血糖管理目的）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
@@ -258,13 +285,12 @@ const ingredientMaster = [
     brands: ["カナグル®"],
     class: "SGLT2",
     start: [
-      { min: 45, max: 999, text: "開始可",                level: "green"  },
-      { min: 30, max: 44,  text: "慎重開始",              level: "yellow" },
-      { min: 0,  max: 29,  text: "開始不可",              level: "red"    }
+      { min: 45, max: 999, text: "開始可（100 mg）",           level: "green"  },
+      { min: 0,  max: 44,  text: "開始不可（eGFR < 45）",      level: "red"    }
     ],
     continue: [
-      { min: 30, max: 999, text: "継続可",                level: "green"  },
-      { min: 0,  max: 29,  text: "原則中止",              level: "red"    }
+      { min: 45, max: 999, text: "継続可",                     level: "green"  },
+      { min: 0,  max: 44,  text: "原則中止",                   level: "red"    }
     ],
     dialysis:      "禁忌（血糖管理目的）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
@@ -276,12 +302,12 @@ const ingredientMaster = [
     brands: ["スーグラ®"],
     class: "SGLT2",
     start: [
-      { min: 45, max: 999, text: "開始可",                level: "green"  },
-      { min: 0,  max: 44,  text: "開始不可",              level: "red"    }
+      { min: 45, max: 999, text: "開始可（50〜100 mg）",        level: "green"  },
+      { min: 0,  max: 44,  text: "開始不可（eGFR < 45）",      level: "red"    }
     ],
     continue: [
-      { min: 45, max: 999, text: "継続可",                level: "green"  },
-      { min: 0,  max: 44,  text: "原則中止",              level: "red"    }
+      { min: 45, max: 999, text: "継続可",                     level: "green"  },
+      { min: 0,  max: 44,  text: "原則中止",                   level: "red"    }
     ],
     dialysis:      "禁忌（血糖管理目的）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
@@ -293,12 +319,12 @@ const ingredientMaster = [
     brands: ["ルセフィ®"],
     class: "SGLT2",
     start: [
-      { min: 45, max: 999, text: "開始可",                level: "green"  },
-      { min: 0,  max: 44,  text: "開始不可",              level: "red"    }
+      { min: 30, max: 999, text: "開始可（2.5〜5 mg）",         level: "green"  },
+      { min: 0,  max: 29,  text: "開始不可（eGFR < 30）",      level: "red"    }
     ],
     continue: [
-      { min: 45, max: 999, text: "継続可",                level: "green"  },
-      { min: 0,  max: 44,  text: "原則中止",              level: "red"    }
+      { min: 30, max: 999, text: "継続可",                     level: "green"  },
+      { min: 0,  max: 29,  text: "原則中止",                   level: "red"    }
     ],
     dialysis:      "禁忌（血糖管理目的）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
@@ -310,12 +336,12 @@ const ingredientMaster = [
     brands: ["デベルザ®"],
     class: "SGLT2",
     start: [
-      { min: 45, max: 999, text: "開始可",                level: "green"  },
-      { min: 0,  max: 44,  text: "開始不可",              level: "red"    }
+      { min: 45, max: 999, text: "開始可（20 mg）",             level: "green"  },
+      { min: 0,  max: 44,  text: "開始不可（eGFR < 45）",      level: "red"    }
     ],
     continue: [
-      { min: 45, max: 999, text: "継続可",                level: "green"  },
-      { min: 0,  max: 44,  text: "原則中止",              level: "red"    }
+      { min: 45, max: 999, text: "継続可",                     level: "green"  },
+      { min: 0,  max: 44,  text: "原則中止",                   level: "red"    }
     ],
     dialysis:      "禁忌（血糖管理目的）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
@@ -326,8 +352,11 @@ const ingredientMaster = [
     ingredient: "ピオグリタゾン",
     brands: ["アクトス®"],
     class: "TZD",
-    renal:    "調整不要",
-    dialysis: "可（慎重）",
+    renal: [
+      { min: 60,  max: 999, text: "15〜45 mg/日（慎重）",       level: "yellow" },
+      { min: 0,   max: 59,  text: "慎重投与（浮腫・心不全に注意）", level: "orange" }
+    ],
+    dialysis: "禁忌（浮腫・心不全増悪リスク）",
     risk:     "浮腫・心不全増悪リスク。高齢女性で骨折リスク増加（PROactive 解析）"
   },
   {
