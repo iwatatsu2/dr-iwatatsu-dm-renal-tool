@@ -2,16 +2,17 @@
 
 /* =====================================================
    Dr.いわたつ 糖尿病経口薬 腎機能サポートツール
-   script.js  ver2.0  (成分マスターベース 全面再設計)
+   script.js  ver3.0  (商品名完全網羅版)
    2026-02
 ===================================================== */
 
 // ══════════════════════════════════════════════════════
-//  成分マスター
+//  成分マスター（brand 配列追加）
 // ══════════════════════════════════════════════════════
 const ingredientMaster = [
   {
     ingredient: "メトホルミン",
+    brands: ["メトグルコ®", "グリコラン®", "ジベトス®"],
     class: "ビグアナイド",
     renal: [
       { min: 60,  max: 999, text: "最大 2250 mg/日", level: "green"  },
@@ -27,6 +28,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "グリメピリド",
+    brands: ["アマリール®"],
     class: "SU",
     renal:    "腎機能低下で低血糖リスク増大（慎重投与）",
     dialysis: "慎重",
@@ -35,6 +37,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "グリクラジド",
+    brands: ["グリミクロン®"],
     class: "SU",
     renal:    "腎機能低下で低血糖リスク増大（慎重投与）",
     dialysis: "慎重",
@@ -43,6 +46,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "グリベンクラミド",
+    brands: ["オイグルコン®", "ダオニール®"],
     class: "SU",
     renal:    "腎機能低下で禁忌に準じる",
     dialysis: "禁忌",
@@ -51,6 +55,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "ナテグリニド",
+    brands: ["スターシス®", "ファスティック®"],
     class: "グリニド",
     renal:    "高度腎障害では慎重投与",
     dialysis: "慎重",
@@ -59,6 +64,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "ミチグリニド",
+    brands: ["グルファスト®"],
     class: "グリニド",
     renal:    "高度腎障害では慎重投与",
     dialysis: "慎重",
@@ -67,6 +73,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "レパグリニド",
+    brands: ["シュアポスト®"],
     class: "グリニド",
     renal:    "腎機能低下でも比較的使用しやすい（胆汁排泄主体）",
     dialysis: "可（慎重）",
@@ -74,7 +81,35 @@ const ingredientMaster = [
     risk:     "低血糖"
   },
   {
+    ingredient: "ボグリボース",
+    brands: ["ベイスン®"],
+    class: "αGI",
+    renal:    "調整不要（腸管内作用・吸収ほぼなし）",
+    dialysis: "可",
+    sickday:  "中止（食事摂取不良時）",
+    risk:     "腸閉塞・肝機能障害（まれ）"
+  },
+  {
+    ingredient: "アカルボース",
+    brands: ["グルコバイ®"],
+    class: "αGI",
+    renal:    "高度腎障害（Cr 2.0 以上）では禁忌",
+    dialysis: "禁忌",
+    sickday:  "中止（食事摂取不良時）",
+    risk:     "腸閉塞・肝機能障害（まれ）"
+  },
+  {
+    ingredient: "ミグリトール",
+    brands: ["セイブル®"],
+    class: "αGI",
+    renal:    "高度腎障害では禁忌（腎排泄型）",
+    dialysis: "禁忌",
+    sickday:  "中止（食事摂取不良時）",
+    risk:     "腸閉塞（まれ）"
+  },
+  {
     ingredient: "シタグリプチン",
+    brands: ["ジャヌビア®", "グラクティブ®"],
     class: "DPP-4",
     renal: [
       { min: 50, max: 999, text: "50 mg（最大 100 mg）",  level: "green"  },
@@ -86,16 +121,18 @@ const ingredientMaster = [
   },
   {
     ingredient: "ビルダグリプチン",
+    brands: ["エクア®"],
     class: "DPP-4",
     renal: [
-      { min: 50, max: 999, text: "50 mg × 2 回/日",     level: "green"  },
-      { min: 0,  max: 49,  text: "50 mg × 1 回/日（減量）", level: "yellow" }
+      { min: 50, max: 999, text: "50 mg × 2 回/日",          level: "green"  },
+      { min: 0,  max: 49,  text: "50 mg × 1 回/日（減量）",  level: "yellow" }
     ],
     dialysis: "可（50 mg × 1 回/日）",
     sickday:  "原則継続可（脱水なければ）"
   },
   {
     ingredient: "アログリプチン",
+    brands: ["ネシーナ®"],
     class: "DPP-4",
     renal: [
       { min: 60, max: 999, text: "25 mg/日",              level: "green"  },
@@ -106,31 +143,8 @@ const ingredientMaster = [
     sickday:  "原則継続可（脱水なければ）"
   },
   {
-    ingredient: "リナグリプチン",
-    class: "DPP-4",
-    renal:    "調整不要（胆汁排泄主体）",
-    dialysis: "可",
-    sickday:  "継続可"
-  },
-  {
-    ingredient: "テネリグリプチン",
-    class: "DPP-4",
-    renal:    "調整不要",
-    dialysis: "可",
-    sickday:  "継続可"
-  },
-  {
-    ingredient: "アナグリプチン",
-    class: "DPP-4",
-    renal: [
-      { min: 30, max: 999, text: "100 mg × 2 回/日",     level: "green"  },
-      { min: 0,  max: 29,  text: "100 mg × 1 回/日（減量）", level: "yellow" }
-    ],
-    dialysis: "可（100 mg × 1 回/日）",
-    sickday:  "原則継続可（脱水なければ）"
-  },
-  {
     ingredient: "サキサグリプチン",
+    brands: ["オングリザ®"],
     class: "DPP-4",
     renal: [
       { min: 50, max: 999, text: "5 mg/日",               level: "green"  },
@@ -140,7 +154,35 @@ const ingredientMaster = [
     sickday:  "原則継続可（脱水なければ）"
   },
   {
+    ingredient: "アナグリプチン",
+    brands: ["スイニー®"],
+    class: "DPP-4",
+    renal: [
+      { min: 30, max: 999, text: "100 mg × 2 回/日",          level: "green"  },
+      { min: 0,  max: 29,  text: "100 mg × 1 回/日（減量）",  level: "yellow" }
+    ],
+    dialysis: "可（100 mg × 1 回/日）",
+    sickday:  "原則継続可（脱水なければ）"
+  },
+  {
+    ingredient: "リナグリプチン",
+    brands: ["トラゼンタ®"],
+    class: "DPP-4",
+    renal:    "調整不要（胆汁排泄主体）",
+    dialysis: "可",
+    sickday:  "継続可"
+  },
+  {
+    ingredient: "テネリグリプチン",
+    brands: ["テネリア®"],
+    class: "DPP-4",
+    renal:    "調整不要",
+    dialysis: "可",
+    sickday:  "継続可"
+  },
+  {
     ingredient: "オマリグリプチン",
+    brands: ["マリゼブ®"],
     class: "DPP-4週1",
     renal: [
       { min: 50, max: 999, text: "25 mg/週",              level: "green"  },
@@ -152,6 +194,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "トレラグリプチン",
+    brands: ["ザファテック®"],
     class: "DPP-4週1",
     renal: [
       { min: 50, max: 999, text: "100 mg/週",             level: "green"  },
@@ -162,6 +205,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "イメグリミン",
+    brands: ["ツイミーグ®"],
     class: "グリミン",
     renal: [
       { min: 45, max: 999, text: "2000 mg/日",            level: "green"  },
@@ -175,6 +219,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "ダパグリフロジン",
+    brands: ["フォシーガ®"],
     class: "SGLT2",
     start: [
       { min: 45, max: 999, text: "開始可",                level: "green"  },
@@ -192,6 +237,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "エンパグリフロジン",
+    brands: ["ジャディアンス®"],
     class: "SGLT2",
     start: [
       { min: 45, max: 999, text: "開始可",                level: "green"  },
@@ -209,6 +255,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "カナグリフロジン",
+    brands: ["カナグル®"],
     class: "SGLT2",
     start: [
       { min: 45, max: 999, text: "開始可",                level: "green"  },
@@ -226,6 +273,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "イプラグリフロジン",
+    brands: ["スーグラ®"],
     class: "SGLT2",
     start: [
       { min: 45, max: 999, text: "開始可",                level: "green"  },
@@ -242,6 +290,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "ルセオグリフロジン",
+    brands: ["ルセフィ®"],
     class: "SGLT2",
     start: [
       { min: 45, max: 999, text: "開始可",                level: "green"  },
@@ -258,6 +307,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "トホグリフロジン",
+    brands: ["デベルザ®"],
     class: "SGLT2",
     start: [
       { min: 45, max: 999, text: "開始可",                level: "green"  },
@@ -274,6 +324,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "ピオグリタゾン",
+    brands: ["アクトス®"],
     class: "TZD",
     renal:    "調整不要",
     dialysis: "可（慎重）",
@@ -281,6 +332,7 @@ const ingredientMaster = [
   },
   {
     ingredient: "セマグルチド（経口）",
+    brands: ["リベルサス®"],
     class: "GLP-1",
     renal:    "調整不要",
     dialysis: "慎重",
@@ -294,12 +346,12 @@ const ingredientMaster = [
 //  配合剤マスター
 // ══════════════════════════════════════════════════════
 const combinationMaster = [
-  { brand: "イニシンク®",    ingredients: ["シタグリプチン",   "メトホルミン"]      },
-  { brand: "エクメット®",    ingredients: ["ビルダグリプチン", "メトホルミン"]      },
-  { brand: "メタクト®",      ingredients: ["ピオグリタゾン",   "メトホルミン"]      },
-  { brand: "スージャヌ®",    ingredients: ["シタグリプチン",   "イプラグリフロジン"] },
-  { brand: "トラディアンス®", ingredients: ["リナグリプチン",  "エンパグリフロジン"] },
-  { brand: "カナリア®",      ingredients: ["カナグリフロジン", "メトホルミン"]      }
+  { brand: "イニシンク®",     ingredients: ["シタグリプチン",   "メトホルミン"]       },
+  { brand: "エクメット®",     ingredients: ["ビルダグリプチン", "メトホルミン"]       },
+  { brand: "メタクト®",       ingredients: ["ピオグリタゾン",   "メトホルミン"]       },
+  { brand: "スージャヌ®",     ingredients: ["シタグリプチン",   "イプラグリフロジン"]  },
+  { brand: "トラディアンス®",  ingredients: ["リナグリプチン",   "エンパグリフロジン"]  },
+  { brand: "カナリア®",       ingredients: ["カナグリフロジン", "メトホルミン"]       }
 ];
 
 // ══════════════════════════════════════════════════════
@@ -311,19 +363,23 @@ const BADGE = { green: "badge-green", yellow: "badge-yellow", orange: "badge-ora
 function themeClass(level) { return THEME[level] || THEME.gray; }
 function badgeClass(level) { return BADGE[level] || BADGE.gray; }
 
-/** eGFR に対応するレンジエントリを返す */
 function matchRange(ranges, egfr) {
   if (!Array.isArray(ranges)) return null;
   return ranges.find(r => egfr >= r.min && egfr <= r.max) || null;
 }
 
-/** 最も重篤な level を返す（SGLT2 の開始/継続を合成するため） */
 function worstLevel(levels) {
   const order = ["red", "orange", "yellow", "green"];
   for (const l of order) {
     if (levels.includes(l)) return l;
   }
   return "gray";
+}
+
+/** 商品名行を生成する */
+function renderBrands(item) {
+  if (!item.brands || item.brands.length === 0) return "";
+  return `<p class="brand-line"><span class="brand-label">商品名：</span>${item.brands.join("／")}</p>`;
 }
 
 // ══════════════════════════════════════════════════════
@@ -347,6 +403,16 @@ function renderRenalText(item, egfr, dialysis) {
   return { level: "gray", html: `<p>情報なし</p>` };
 }
 
+function buildExtras(item) {
+  let html = "";
+  if (item.perioperative) html += `<p><strong>周術期：</strong>${item.perioperative}</p>`;
+  if (item.contrast)      html += `<p><strong>造影剤：</strong>${item.contrast}</p>`;
+  if (item.sickday)       html += `<p><strong>シックデイ：</strong>${item.sickday}</p>`;
+  if (item.risk)          html += `<p><strong>重大副作用：</strong>${item.risk}</p>`;
+  if (item.special)       html += `<p><strong>特記：</strong>${item.special}</p>`;
+  return html;
+}
+
 function renderSGLT2Card(item, egfr, dialysis) {
   let startEntry, contEntry, overallLevel;
 
@@ -361,8 +427,6 @@ function renderSGLT2Card(item, egfr, dialysis) {
     overallLevel = worstLevel([startEntry.level, contEntry.level]);
   }
 
-  const extras = buildExtras(item, egfr, dialysis);
-
   return `
   <div class="drug-card ${themeClass(overallLevel)}">
     <div class="drug-header">
@@ -373,30 +437,20 @@ function renderSGLT2Card(item, egfr, dialysis) {
       <span class="status-badge ${badgeClass(startEntry.level)}">${startEntry.text}</span>
     </div>
     <div class="drug-detail">
+      ${renderBrands(item)}
       <p><strong>開始：</strong><span class="lv-${startEntry.level}">${startEntry.text}</span></p>
       <p><strong>継続：</strong><span class="lv-${contEntry.level}">${contEntry.text}</span></p>
-      ${extras}
+      ${buildExtras(item)}
     </div>
   </div>`;
-}
-
-function buildExtras(item, egfr, dialysis) {
-  let html = "";
-  if (item.perioperative) html += `<p><strong>周術期：</strong>${item.perioperative}</p>`;
-  if (item.contrast)      html += `<p><strong>造影剤：</strong>${item.contrast}</p>`;
-  if (item.sickday)       html += `<p><strong>シックデイ：</strong>${item.sickday}</p>`;
-  if (item.risk)          html += `<p><strong>重大副作用：</strong>${item.risk}</p>`;
-  if (item.special)       html += `<p><strong>特記：</strong>${item.special}</p>`;
-  return html;
 }
 
 function renderIngredientCard(item, egfr, dialysis) {
   if (item.class === "SGLT2") return renderSGLT2Card(item, egfr, dialysis);
 
   const { level, html: renalHtml } = renderRenalText(item, egfr, dialysis);
-  const extras = buildExtras(item, egfr, dialysis);
 
-  const statusLabel = level === "green" ? "標準"
+  const statusLabel = level === "green"  ? "標準"
     : level === "yellow" ? "減量"
     : level === "orange" ? "慎重"
     : level === "red"    ? "禁忌"
@@ -412,8 +466,9 @@ function renderIngredientCard(item, egfr, dialysis) {
       <span class="status-badge ${badgeClass(level)}">${statusLabel}</span>
     </div>
     <div class="drug-detail">
+      ${renderBrands(item)}
       ${renalHtml}
-      ${extras}
+      ${buildExtras(item)}
     </div>
   </div>`;
 }
@@ -426,15 +481,15 @@ function renderCombinationSection(egfr, dialysis) {
   let html = `<div class="section-title">配合剤（成分分解表示）</div>`;
 
   for (const combo of combinationMaster) {
-    const resolved = combo.ingredients.map(name =>
-      ingredientMaster.find(m => m.ingredient === name)
-    ).filter(Boolean);
+    const resolved = combo.ingredients
+      .map(name => ingredientMaster.find(m => m.ingredient === name))
+      .filter(Boolean);
 
     if (resolved.length === 0) continue;
 
     html += `
     <div class="combo-wrapper">
-      <div class="combo-brand-label">${combo.brand}（${combo.ingredients.join(" + ")}）</div>
+      <div class="combo-brand-label">${combo.brand}（${combo.ingredients.join(" ＋ ")}）</div>
       ${resolved.map(item => renderIngredientCard(item, egfr, dialysis)).join("")}
     </div>`;
   }
@@ -449,6 +504,7 @@ const CLASS_ORDER = [
   { key: "ビグアナイド",  label: "ビグアナイド系" },
   { key: "SU",           label: "SU 薬（スルホニルウレア）" },
   { key: "グリニド",     label: "グリニド薬（速効型インスリン分泌促進）" },
+  { key: "αGI",          label: "α-グルコシダーゼ阻害薬（αGI）" },
   { key: "DPP-4",        label: "DPP-4 阻害薬（1 日 1 回）" },
   { key: "DPP-4週1",     label: "DPP-4 阻害薬（週 1 回）" },
   { key: "グリミン",     label: "イミダゾリン系（グリミン）" },
@@ -518,12 +574,13 @@ function renderSafetyBlocks() {
     <div class="info-block-body">
       <p><strong>中止が必要な薬剤</strong></p>
       <ul>
-        <li>メトホルミン</li>
-        <li>SGLT2 阻害薬</li>
-        <li>イメグリミン（ツイミーグ）</li>
-        <li>セマグルチド経口（リベルサス）</li>
-        <li>SU 薬</li>
-        <li>グリニド薬</li>
+        <li>メトホルミン（メトグルコ®・グリコラン®・ジベトス®）</li>
+        <li>SGLT2 阻害薬（フォシーガ®・ジャディアンス®・カナグル®・スーグラ®・ルセフィ®・デベルザ®）</li>
+        <li>イメグリミン（ツイミーグ®）</li>
+        <li>セマグルチド経口（リベルサス®）</li>
+        <li>SU 薬（アマリール®・グリミクロン®・オイグルコン®・ダオニール®）</li>
+        <li>グリニド薬（スターシス®・ファスティック®・グルファスト®・シュアポスト®）</li>
+        <li>αGI（食事摂取不良時は中止）</li>
       </ul>
       <p style="margin-top:8px"><strong>原則継続可</strong></p>
       <ul>
@@ -598,12 +655,25 @@ function calculate() {
 (function injectDynamicStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    .lv-green  { color: var(--green);  font-weight:700; }
-    .lv-yellow { color: var(--yellow); font-weight:700; }
-    .lv-orange { color: var(--orange); font-weight:700; }
-    .lv-red    { color: var(--red);    font-weight:700; }
-    .lv-gray   { color: var(--gray);   font-weight:700; }
+    .lv-green  { color: var(--green);  font-weight: 700; }
+    .lv-yellow { color: var(--yellow); font-weight: 700; }
+    .lv-orange { color: var(--orange); font-weight: 700; }
+    .lv-red    { color: var(--red);    font-weight: 700; }
+    .lv-gray   { color: var(--gray);   font-weight: 700; }
 
+    /* 商品名行 */
+    .brand-line {
+      font-size: .8rem;
+      color: var(--blue-dark);
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+    .brand-label {
+      font-weight: 700;
+      margin-right: 2px;
+    }
+
+    /* DPP-4 注意文 */
     .dpp4-note {
       font-size: .75rem;
       color: var(--blue-mid);
@@ -611,10 +681,10 @@ function calculate() {
       margin-bottom: 6px;
     }
 
+    /* 配合剤ラッパー */
     .combo-wrapper {
       margin-bottom: 18px;
     }
-
     .combo-brand-label {
       background: var(--blue-dark);
       color: #fff;
@@ -624,11 +694,9 @@ function calculate() {
       border-radius: 8px 8px 0 0;
       margin-bottom: -4px;
     }
-
     .combo-wrapper .drug-card:first-of-type {
-      border-radius: 0 0 0 0;
+      border-radius: 0;
     }
-
     .combo-wrapper .drug-card:last-of-type {
       border-radius: 0 0 var(--radius) var(--radius);
       margin-bottom: 0;
@@ -650,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('dialysis-check').addEventListener('change', function () {
     const input = document.getElementById('egfr-input');
-    input.disabled    = this.checked;
+    input.disabled      = this.checked;
     input.style.opacity = this.checked ? '0.4' : '1';
     if (this.checked) input.value = '';
   });
