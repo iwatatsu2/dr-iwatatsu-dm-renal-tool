@@ -2,7 +2,7 @@
 
 /* =====================================================
    Dr.いわたつ 糖尿病経口薬 腎機能サポートツール
-   script.js  ver4.0  (腎機能別投与量 dm-memo.com 準拠修正版)
+   script.js  ver5.0  (SGLT2阻害薬 適応別・eGFR別投与量 詳細修正版)
    2026-02
 ===================================================== */
 
@@ -248,16 +248,30 @@ const ingredientMaster = [
     ingredient: "ダパグリフロジン",
     brands: ["フォシーガ®"],
     class: "SGLT2",
-    start: [
-      { min: 45, max: 999, text: "開始可（5〜10 mg）",          level: "green"  },
-      { min: 25, max: 44,  text: "開始可（心不全・CKD 適応のみ）", level: "yellow" },
-      { min: 0,  max: 24,  text: "開始不可（血糖管理目的）",     level: "red"    }
+    indications: [
+      {
+        label: "2型糖尿病",
+        start: [
+          { min: 30, max: 999, text: "開始可（5→10 mg）",       level: "green" },
+          { min: 0,  max: 29,  text: "新規開始しない",           level: "red"   }
+        ]
+      },
+      {
+        label: "慢性心不全",
+        start: [
+          { min: 30, max: 999, text: "開始可（10 mg）",         level: "green" },
+          { min: 0,  max: 29,  text: "禁忌",                    level: "red"   }
+        ]
+      },
+      {
+        label: "慢性腎臓病（CKD）",
+        start: [
+          { min: 25, max: 999, text: "開始可（10 mg 固定）",    level: "green" },
+          { min: 0,  max: 24,  text: "開始しない",              level: "red"   }
+        ]
+      }
     ],
-    continue: [
-      { min: 25, max: 999, text: "継続可",                      level: "green"  },
-      { min: 0,  max: 24,  text: "原則中止",                    level: "red"    }
-    ],
-    dialysis:      "禁忌（血糖管理目的）",
+    dialysis:      "禁忌（全適応共通）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
     sickday:       "中止",
     risk:          "正常血糖 DKA（インスリン低下→グルカゴン増加→ケトン産生亢進。腹痛・悪心・倦怠感は受診）"
@@ -266,16 +280,30 @@ const ingredientMaster = [
     ingredient: "エンパグリフロジン",
     brands: ["ジャディアンス®"],
     class: "SGLT2",
-    start: [
-      { min: 45, max: 999, text: "開始可（10〜25 mg）",        level: "green"  },
-      { min: 20, max: 44,  text: "開始可（心不全・CKD 適応のみ）", level: "yellow" },
-      { min: 0,  max: 19,  text: "開始不可",                   level: "red"    }
+    indications: [
+      {
+        label: "2型糖尿病",
+        start: [
+          { min: 30, max: 999, text: "開始可（10→25 mg）",     level: "green" },
+          { min: 0,  max: 29,  text: "新規開始しない",          level: "red"   }
+        ]
+      },
+      {
+        label: "慢性心不全",
+        start: [
+          { min: 20, max: 999, text: "開始可（10 mg）",        level: "green" },
+          { min: 0,  max: 19,  text: "禁忌",                   level: "red"   }
+        ]
+      },
+      {
+        label: "慢性腎臓病（CKD）",
+        start: [
+          { min: 20, max: 999, text: "使用可（10 mg）",        level: "green" },
+          { min: 0,  max: 19,  text: "禁忌",                   level: "red"   }
+        ]
+      }
     ],
-    continue: [
-      { min: 20, max: 999, text: "継続可",                     level: "green"  },
-      { min: 0,  max: 19,  text: "原則中止",                   level: "red"    }
-    ],
-    dialysis:      "禁忌（血糖管理目的）",
+    dialysis:      "禁忌（全適応共通）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
     sickday:       "中止",
     risk:          "正常血糖 DKA"
@@ -284,15 +312,23 @@ const ingredientMaster = [
     ingredient: "カナグリフロジン",
     brands: ["カナグル®"],
     class: "SGLT2",
-    start: [
-      { min: 45, max: 999, text: "開始可（100 mg）",           level: "green"  },
-      { min: 0,  max: 44,  text: "開始不可（eGFR < 45）",      level: "red"    }
+    indications: [
+      {
+        label: "2型糖尿病",
+        start: [
+          { min: 30, max: 999, text: "開始可（100 mg）",       level: "green" },
+          { min: 0,  max: 29,  text: "新規開始しない",          level: "red"   }
+        ]
+      },
+      {
+        label: "慢性腎臓病（CKD）",
+        start: [
+          { min: 30, max: 999, text: "使用可（100 mg）",       level: "green" },
+          { min: 0,  max: 29,  text: "不可",                   level: "red"   }
+        ]
+      }
     ],
-    continue: [
-      { min: 45, max: 999, text: "継続可",                     level: "green"  },
-      { min: 0,  max: 44,  text: "原則中止",                   level: "red"    }
-    ],
-    dialysis:      "禁忌（血糖管理目的）",
+    dialysis:      "禁忌（全適応共通）",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
     sickday:       "中止",
     risk:          "正常血糖 DKA"
@@ -301,15 +337,17 @@ const ingredientMaster = [
     ingredient: "イプラグリフロジン",
     brands: ["スーグラ®"],
     class: "SGLT2",
-    start: [
-      { min: 45, max: 999, text: "開始可（50〜100 mg）",        level: "green"  },
-      { min: 0,  max: 44,  text: "開始不可（eGFR < 45）",      level: "red"    }
+    indications: [
+      {
+        label: "2型糖尿病のみ（CKD適応なし）",
+        start: [
+          { min: 30, max: 999, text: "使用可（50 mg）",         level: "green"  },
+          { min: 0,  max: 29,  text: "使用しない（eGFR < 30）", level: "red"    }
+        ],
+        note: "eGFR 30〜59：慎重投与（効果減弱）"
+      }
     ],
-    continue: [
-      { min: 45, max: 999, text: "継続可",                     level: "green"  },
-      { min: 0,  max: 44,  text: "原則中止",                   level: "red"    }
-    ],
-    dialysis:      "禁忌（血糖管理目的）",
+    dialysis:      "禁忌",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
     sickday:       "中止",
     risk:          "正常血糖 DKA"
@@ -318,32 +356,36 @@ const ingredientMaster = [
     ingredient: "ルセオグリフロジン",
     brands: ["ルセフィ®"],
     class: "SGLT2",
-    start: [
-      { min: 30, max: 999, text: "開始可（2.5〜5 mg）",         level: "green"  },
-      { min: 0,  max: 29,  text: "開始不可（eGFR < 30）",      level: "red"    }
+    indications: [
+      {
+        label: "2型糖尿病のみ（CKD適応なし）",
+        start: [
+          { min: 30, max: 999, text: "使用可（2.5〜5 mg）",     level: "green"  },
+          { min: 0,  max: 29,  text: "使用しない（eGFR < 30）", level: "red"    }
+        ],
+        note: "eGFR 30〜59：慎重投与"
+      }
     ],
-    continue: [
-      { min: 30, max: 999, text: "継続可",                     level: "green"  },
-      { min: 0,  max: 29,  text: "原則中止",                   level: "red"    }
-    ],
-    dialysis:      "禁忌（血糖管理目的）",
+    dialysis:      "禁忌",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
     sickday:       "中止",
     risk:          "正常血糖 DKA"
   },
   {
     ingredient: "トホグリフロジン",
-    brands: ["デベルザ®"],
+    brands: ["デベルザ®", "アプルウェイ®"],
     class: "SGLT2",
-    start: [
-      { min: 45, max: 999, text: "開始可（20 mg）",             level: "green"  },
-      { min: 0,  max: 44,  text: "開始不可（eGFR < 45）",      level: "red"    }
+    indications: [
+      {
+        label: "2型糖尿病のみ（CKD適応なし）",
+        start: [
+          { min: 60, max: 999, text: "開始可（20 mg）",          level: "green"  },
+          { min: 30, max: 59,  text: "慎重投与（効果減弱）",      level: "yellow" },
+          { min: 0,  max: 29,  text: "原則開始しない（eGFR < 30）", level: "red" }
+        ]
+      }
     ],
-    continue: [
-      { min: 45, max: 999, text: "継続可",                     level: "green"  },
-      { min: 0,  max: 44,  text: "原則中止",                   level: "red"    }
-    ],
-    dialysis:      "禁忌（血糖管理目的）",
+    dialysis:      "禁忌",
     perioperative: "術前 3 日前から中止 / 術後は経口摂取安定後に再開",
     sickday:       "中止",
     risk:          "正常血糖 DKA"
@@ -443,8 +485,55 @@ function buildExtras(item) {
 }
 
 function renderSGLT2Card(item, egfr, dialysis) {
-  let startEntry, contEntry, overallLevel;
+  // indications 配列対応（適応別表示）
+  if (item.indications) {
+    const rows = item.indications.map(ind => {
+      if (dialysis) {
+        return `<tr>
+          <td><strong>${ind.label}</strong></td>
+          <td colspan="2"><span class="lv-red">禁忌</span></td>
+        </tr>`;
+      }
+      const entry = matchRange(ind.start, egfr) || { text: "情報なし", level: "gray" };
+      const noteHtml = ind.note ? `<br><small style="color:var(--gray)">${ind.note}</small>` : "";
+      return `<tr>
+        <td><strong>${ind.label}</strong></td>
+        <td><span class="lv-${entry.level}">${entry.text}</span>${noteHtml}</td>
+      </tr>`;
+    });
 
+    const allLevels = dialysis
+      ? ["red"]
+      : item.indications.map(ind => (matchRange(ind.start, egfr) || { level: "gray" }).level);
+    const overallLevel = worstLevel(allLevels);
+    const badgeText = dialysis ? "禁忌" :
+      overallLevel === "green"  ? "使用可" :
+      overallLevel === "yellow" ? "慎重" :
+      overallLevel === "orange" ? "慎重" :
+      overallLevel === "red"    ? "禁忌/不可" : "確認";
+
+    return `
+    <div class="drug-card ${themeClass(overallLevel)}">
+      <div class="drug-header">
+        <div>
+          <div class="drug-name">${item.ingredient}</div>
+          <div class="drug-sub">${item.class}</div>
+        </div>
+        <span class="status-badge ${badgeClass(overallLevel)}">${badgeText}</span>
+      </div>
+      <div class="drug-detail">
+        ${renderBrands(item)}
+        <table class="sglt2-table">
+          <thead><tr><th>適応</th><th>eGFR ${dialysis ? "透析" : egfr} における判定</th></tr></thead>
+          <tbody>${rows.join("")}</tbody>
+        </table>
+        ${buildExtras(item)}
+      </div>
+    </div>`;
+  }
+
+  // 旧形式（start/continue 配列）のフォールバック
+  let startEntry, contEntry, overallLevel;
   if (dialysis) {
     const d = item.dialysis || "禁忌";
     overallLevel = "red";
@@ -455,7 +544,6 @@ function renderSGLT2Card(item, egfr, dialysis) {
     contEntry    = matchRange(item.continue, egfr) || { text: "情報なし", level: "gray" };
     overallLevel = worstLevel([startEntry.level, contEntry.level]);
   }
-
   return `
   <div class="drug-card ${themeClass(overallLevel)}">
     <div class="drug-header">
@@ -700,6 +788,29 @@ function calculate() {
     .brand-label {
       font-weight: 700;
       margin-right: 2px;
+    }
+
+    /* SGLT2 適応別テーブル */
+    .sglt2-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .8rem;
+      margin: 6px 0 4px;
+    }
+    .sglt2-table th {
+      background: rgba(0,0,0,.06);
+      padding: 4px 8px;
+      text-align: left;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(0,0,0,.1);
+    }
+    .sglt2-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      vertical-align: top;
+    }
+    .sglt2-table tr:last-child td {
+      border-bottom: none;
     }
 
     /* DPP-4 注意文 */
