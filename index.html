@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="薬剤師向け 糖尿病経口薬 腎機能・周術期・安全管理サポートツール by Dr.いわたつ" />
+  <title>Dr.いわたつ 糖尿病経口薬サポート</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header>
+  <img id="doctor-img" src="dr-iwatatsu.jpg" alt="Dr.いわたつ" />
+  <div class="header-text">
+    <h1>Dr.いわたつ<br>糖尿病経口薬サポート</h1>
+    <p>腎機能・周術期・安全管理 ver 1.0</p>
+  </div>
+</header>
+
+<!-- ===== Main ===== -->
+<main>
+
+  <!-- 凡例 -->
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot dot-green"></span>標準</div>
+    <div class="legend-item"><span class="legend-dot dot-yellow"></span>減量</div>
+    <div class="legend-item"><span class="legend-dot dot-orange"></span>慎重</div>
+    <div class="legend-item"><span class="legend-dot dot-red"></span>禁忌 / 推奨されない</div>
+  </div>
+
+  <!-- 入力カード -->
+  <div class="input-card">
+    <h2>📋 eGFR を入力してください</h2>
+    <div class="input-row">
+      <label for="egfr-input">eGFR</label>
+      <input type="number" id="egfr-input" min="0" max="200" step="0.1"
+             placeholder="例: 45" inputmode="decimal" />
+      <span class="unit">mL/min/1.73m²</span>
+    </div>
+    <div class="dialysis-row">
+      <input type="checkbox" id="dialysis-check" />
+      <label for="dialysis-check">透析患者（eGFR 入力不要）</label>
+    </div>
+    <div class="input-row" style="margin-top:14px">
+      <button id="calc-btn">判定する</button>
+    </div>
+  </div>
+
+  <!-- 結果エリア -->
+  <div id="results"></div>
+
+</main>
+
+<footer>
+  &copy; Dr.いわたつ 糖尿病経口薬サポートツール ver 1.0 &nbsp;|&nbsp; 薬剤師向け意思決定支援ツール
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
